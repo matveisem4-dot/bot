@@ -4,7 +4,7 @@ import os
 from aiogram import Bot, Dispatcher, types, F
 
 # Токен берем из секретов GitHub (BOT_TOKEN)
-TOKEN = os.getenv('BOT_TOKEN')
+TOKEN = '7948707539:AAHKky9CjUz-T-9zI43bvQ1by5JTe1VlV2Y'
 ADMIN_IDS = [1087968824, 7978414708]
 
 # Корни матов
