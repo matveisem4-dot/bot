@@ -1,0 +1,23 @@
+name: Onyx Bot Run
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Будет перезапускаться каждые 6 часов (чтобы не спать)
+  workflow_dispatch:      # Чтобы ты мог запустить его кнопкой
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install aiogram
+      - name: Run Bot
+        run: python main.py
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
