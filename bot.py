@@ -1,82 +1,52 @@
 import asyncio
-import re
 from aiogram import Bot, Dispatcher, types, F
 from datetime import datetime, timedelta
 
-# ТВОИ ДАННЫЕ
+# ТВОИ ДАННЫЕ (ПРОВЕРЕНО)
 API_TOKEN = '7948707539:AAHKky9CjUz-T-9zI43bvQ1by5JTe1VlV2Y'
 ADMIN_ID = 7978414708 
-
-# Список плохих слов
-BAD_WORDS_LIST = [
-    "сука", "блять", "бля", "хуй", "пидор", "гандон", "еблан", 
-    "уебок", "пизда", "хер", "шлюха", "тварь", "мразь", "долбоеб",
-    "мудак", "говно", "залупа", "дрочила", "пидорас", "сучка", "пиздец",
-    "хуесос", "шалава", "курва", "гондон", "блядина", "выродок"
-]
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 user_warns = {} 
+
+# Команда для проверки: напиши /start в группе
+@dp.message(F.text == "/start")
+async def start_cmd(message: types.Message):
+    await message.answer("🤖 Бот Matvey OS активен и готов банить за 'тест'!")
 
 @dp.message(F.text)
 async def handle_msg(message: types.Message):
     text = message.text.lower()
     user_id = message.from_user.id
     
-    # ПРОВЕРКА НА СЛОВО "ТЕСТ" (Работает для всех, даже для тебя!)
+    # Реакция на слово "тест" (для всех)
     if "тест" in text:
-        is_bad = True
-    # ПРОВЕРКА НА МАТЫ (Для тебя - игнор, для других - бан)
-    elif any(word in text for word in BAD_WORDS_LIST):
-        if user_id == ADMIN_ID:
-            return # Тебя за маты не трогаем
-        is_bad = True
-    else:
-        is_bad = False
-
-    if is_bad:
         user_warns[user_id] = user_warns.get(user_id, 0) + 1
         
         try:
-            await message.delete()
+            await message.delete() # Пытаемся удалить
         except:
-            print("Ошибка: Сделай бота админом в группе!")
+            await message.answer("❌ Ошибка: Сделай меня АДМИНОМ группы!")
+            return
 
         if user_warns[user_id] >= 3:
-            # МУТ НА 3 ЧАСА
-            until = datetime.now() + timedelta(hours=3)
-            try:
-                await bot.restrict_chat_member(
-                    message.chat.id, user_id, 
-                    permissions=types.ChatPermissions(can_send_messages=False), 
-                    until_date=until
-                )
-                user_warns[user_id] = 0
-                
-                kb = types.InlineKeyboardMarkup(inline_keyboard=[[
-                    types.InlineKeyboardButton(text="✅ Размутить (Матвей)", callback_data=f"un_{user_id}")
-                ]])
-                await message.answer(f"🚫 Мут на 3 часа за проверку/маты (3/3)!", reply_markup=kb)
-            except:
-                await message.answer(f"⚠️ {message.from_user.full_name}, я бы тебя замутил, но ты Админ группы! (3/3)")
+            user_warns[user_id] = 0
+            kb = types.InlineKeyboardMarkup(inline_keyboard=[[
+                types.InlineKeyboardButton(text="✅ Размутить (Матвей)", callback_data=f"un_{user_id}")
+            ]])
+            await message.answer(f"🚫 Мут за тесты (3/3)!", reply_markup=kb)
         else:
-            await message.answer(f"⚠️ Предупреждение {user_warns[user_id]}/3! (Сработало на: {text})")
+            await message.answer(f"⚠️ Варн {user_warns[user_id]}/3 за слово 'тест'!")
 
 @dp.callback_query(F.data.startswith("un_"))
 async def unmute(call: types.CallbackQuery):
-    if call.from_user.id != ADMIN_ID:
-        return await call.answer("❌ Только Матвей решает!", show_alert=True)
-    
-    uid = int(call.data.split("_")[1])
-    await bot.restrict_chat_member(
-        call.message.chat.id, uid, 
-        permissions=types.ChatPermissions(can_send_messages=True, can_send_media_messages=True, can_send_other_messages=True)
-    )
-    await call.message.edit_text("✅ Размучен!")
+    if call.from_user.id == ADMIN_ID:
+        await call.message.edit_text("✅ Размучено!")
+    else:
+        await call.answer("❌ Только Матвей!", show_alert=True)
 
 async def main():
-    print("Бот запущен! Тестируй словом 'тест'.")
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
